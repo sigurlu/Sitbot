@@ -16,35 +16,32 @@ var server = http.createServer(function(req, res) {
   var uri = url.parse(req.url).pathname;
   var today = new Date().getDay();
 
-  var parseStringHandler = function(result, header, linebreak) {
+  var parseStringHandler = function(result) {
     var middager = result['rdf:RDF']
         .item[0]
         .description[0]
         .replace(/(\n *)+/g,'')
         .replace(/\<br\>/g,'\n')
         .replace(/:/g, ": ")
-        .split("<b>");
+        .split(/<b>.*<\/b>/);
 
-    for(var i = 0; i < middager.length; i++) {
-      middager[i] = middager[i].trim().split("</b>")[1];
-    }
-    return header+middager[today]+linebreak;
+    return middager[today].trim();
   };
 
   requestify.get(urls.hangaren).then(function(response) {
     var xml = response.body;
     parseString(xml, function (err, result) {
-      hangaren = parseStringHandler(result, '*Hangaren*', '\n');
+      hangaren = parseStringHandler(result);
     });
 
     requestify.get(urls.realfag).then(function(response) {
       var xml = response.body;
       parseString(xml, function (err, result) {
-        realfag = parseStringHandler(result, '\n*Realfag*', '');
+        realfag = parseStringHandler(result);
       });
 
       if(uri === '/') {
-        res.end(JSON.stringify({ "text": hangaren+realfag }));
+        res.end(JSON.stringify({ "text": "*Hangaren*\n" + hangaren + "\n\n*Realfag*\n" + realfag}));
         console.log('Request made for dinner');
       }
 
