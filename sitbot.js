@@ -18,43 +18,42 @@ var server = http.createServer(function(req, res) {
 
   var parseStringHandler = function(result) {
     var middager = result['rdf:RDF']
-        .item[0]
-        .description[0]
-        .replace(/(\n *)+/g,'')
-        .replace(/\<br\>/g,'\n')
-        .replace(/:/g, ": ")
-        .split(/<b>.*<\/b>/);
+    .item[0]
+    .description[0]
+    .replace(/(\n *)+/g,'')
+    .replace(/\<br\>/g,'\n')
+    .replace(/:/g, ": ")
+    .split(/<b>.*<\/b>/);
 
     return middager[today].trim();
   };
 
-  requestify.get(urls.hangaren).then(function(response) {
-    var xml = response.body;
-    parseString(xml, function (err, result) {
-      hangaren = parseStringHandler(result);
-    });
-
-    requestify.get(urls.realfag).then(function(response) {
+  if(uri === '/middag') {
+    console.log('Request made for dinner');
+    requestify.get(urls.hangaren).then(function(response) {
       var xml = response.body;
       parseString(xml, function (err, result) {
-        realfag = parseStringHandler(result);
+        hangaren = parseStringHandler(result);
       });
-    requestify.get(urls.bitcoin).then(function(response) {
-    // Get the response body
-      json = JSON.parse(response.body);
-    });
 
-      if(uri === '/middag') {
-        res.end(JSON.stringify({ "text": "*Hangaren*\n" + hangaren + "\n\n*Realfag*\n" + realfag}));
-        console.log('Request made for dinner');
-      }else if(uri === '/bitcoin'){
-        res.end(JSON.stringify({ "text": "FACEBOOK MONIES: " + json["final_balance"]/100000000 + " BTC"}));
-        console.log('Request made for bitcoin');
-      }
-
-      res.writeHead(200, {'Content-Type': 'application/json'});
+      requestify.get(urls.realfag).then(function(response) {
+        var xml = response.body;
+        parseString(xml, function (err, result) {
+          realfag = parseStringHandler(result);
         });
-  });
+        res.writeHead(200, {'Content-Type': 'application/json'});
+        res.end(JSON.stringify({ "text": "*Hangaren*\n" + hangaren + "\n\n*Realfag*\n" + realfag}));
+      });
+    });
+  } else if(uri === '/bitcoin'){
+    console.log('Request made for bitcoin');
+    requestify.get(urls.bitcoin).then(function(response) {
+      // Get the response body
+      json = JSON.parse(response.body);
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.end(JSON.stringify({ "text": "FACEBOOK MONIES: " + json["final_balance"]/100000000 + " BTC"}));
+    });
+  } 
 });
 
 server.listen(process.env.PORT || 5000);
