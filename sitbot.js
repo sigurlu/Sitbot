@@ -4,11 +4,11 @@ var url = require('url');
 var http = require('http');
 var requestify = require('requestify');
 var parseString = require('xml2js').parseString;
-var hangaren, realfag;
-
+var hangaren, realfag,json;
 var urls = {
   hangaren: 'https://www.sit.no/rss.ap?thisId=36444&lang=0&ma=on&ti=on&on=on&to=on&fr=on',
-  realfag: 'https://www.sit.no/rss.ap?thisId=36447&lang=0&ma=on&ti=on&on=on&to=on&fr=on'
+  realfag: 'https://www.sit.no/rss.ap?thisId=36447&lang=0&ma=on&ti=on&on=on&to=on&fr=on',
+  bitcoin: 'https://blockchain.info/address/13iB6CdUKNTunbCtAW4WNvohSs4m41D8uU?format=json'
 };
 
 var server = http.createServer(function(req, res) {
@@ -39,14 +39,21 @@ var server = http.createServer(function(req, res) {
       parseString(xml, function (err, result) {
         realfag = parseStringHandler(result);
       });
+    requestify.get(urls.bitcoin).then(function(response) {
+    // Get the response body
+      json = JSON.parse(response.body);
+    });
 
-      if(uri === '/') {
+      if(uri === '/middag') {
         res.end(JSON.stringify({ "text": "*Hangaren*\n" + hangaren + "\n\n*Realfag*\n" + realfag}));
         console.log('Request made for dinner');
+      }else if(uri === '/bitcoin'){
+        res.end(JSON.stringify({ "text": "FACEBOOK MONIES: " + json["final_balance"]/100000000 + " BTC"}));
+        console.log('Request made for bitcoin');
       }
 
       res.writeHead(200, {'Content-Type': 'application/json'});
-    });
+        });
   });
 });
 
