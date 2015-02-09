@@ -23,6 +23,7 @@ var server = http.createServer(function(req, res) {
     .replace(/(\n *)+/g,'')
     .replace(/\<br\>/g,'\n')
     .replace(/:/g, ": ")
+    .replace("Lasagne", "LASSER")
     .split(/<b>.*<\/b>/);
 
     return middager[today].trim();
